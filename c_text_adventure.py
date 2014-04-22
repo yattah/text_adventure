@@ -1,7 +1,5 @@
 # TODO
 # 
-# Make a player class - kinda
-# 
 # Make NPC class - all ar actors?
 # 
 # make item class
