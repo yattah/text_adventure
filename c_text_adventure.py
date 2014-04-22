@@ -337,7 +337,7 @@ def buy(name):
 	else:
 		print "cant buy that shit"
 
-def potion():
+def potion(arg):
 	if arg in player.inventory and player.curr_hp < player.max_hp:
 		player.inventory.remove(arg)
 		x = random.choice(xrange(5)) + player.wit
@@ -356,7 +356,7 @@ def use(arg):
 	arg = ''.join(arg)
 	if arg in player.inventory:
 		if arg == 'potion':
-			potion()
+			potion(arg)
 		elif arg == 'scroll':
 # 			scroll()
 			print "scrolls leel"
