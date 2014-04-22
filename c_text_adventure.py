@@ -1,4 +1,5 @@
 # TODO
+# seems i should move this to a different file
 # 
 # Make NPC class - all ar actors?
 # 
