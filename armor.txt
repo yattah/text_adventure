@@ -1,0 +1,4 @@
+Breastplate	4	6	chest
+Leather_Tunic	2	4	chest
+shield	6	10	left_hand
+boots	2	3	feet

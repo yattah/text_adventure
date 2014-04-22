@@ -1,0 +1,8 @@
+a small stone room with a [%s] along one wall.	statue	False
+a dim room with a [%s] displayed on one wall.	sword	True
+a long narrow hallway.
+a damp room with a [%s] running through the center.	cistern	False
+a damp room.
+a small stone room.
+a stone room.
+a large stone room.
