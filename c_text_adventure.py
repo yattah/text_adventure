@@ -1,18 +1,3 @@
-# TODO
-# seems i should move this to a different file
-# 
-# Make NPC class - all ar actors?
-# 
-# make item class
-# 
-# make equipment class
-# 
-# figure out what the fuck a component is and use them
-
-
-# ACtual TODO
-# get room desc pulling from file randomly not the top line each time.
-# extract the room desc bullshit to its own func
 import random
 global taunts
 global verblist
@@ -20,7 +5,7 @@ prev_room = None
 curr_room = None
 global room_num
 room_num = -1
-		
+
 class Room(object):
 	def __init__(self):
 		global room_num
@@ -53,9 +38,9 @@ class Room(object):
 		if self.exitf == roomlink[rooms[self.room_num - 1].exitf]:
 			while self.exitf == self.exitb:
 				self.exitf = random.choice(directions)
-		else:	
+		else:
 			pass
-	
+
 	def get_actor(self):
 		if random.choice(range(100)) > 10:
 			x = random.choice(open('npc.txt').readlines()).split('\t')
@@ -88,14 +73,14 @@ class Actor(object):
 		self.performances = 0
 		self.performed = False
 		self.sex = random.choice(['He', 'She'])
-		
+
 	def get_inv(self):
 		self.purchase = False
 		self.first_time = False
 		x = random.choice(range(4)) + 1
 		print "getting %d items for mechant inv" % x
 		x = range(x)
-		for i in x:	
+		for i in x:
 			self.inventory.append(random.choice(price.keys()))
 
 	def status(self):
@@ -105,17 +90,18 @@ class Actor(object):
 		print "\nStats: \nStrength: %s\nAgility: %s\nToughness: %s\nWit: %s\n" % (
 		self.strength, self.agility, self.toughness, self.wit)
 		print "Gold: %d" % self.gold
+		print "You are carrying:"
 		print "Inventory: %s" % self.inventory
-		
+
+
 # learn more class inheritance dummeh
 class Enemy(Actor):
 	def __init__(self, name):
 		super(Enemy, self).__init__(name)
 		self.hostile = True
 		self.gold = random.choice(range(50))
-		
-		
-		
+
+
 def move(arg):
 	global curr_room
 	arg = ' '.join(arg)
@@ -177,9 +163,11 @@ def attack(arg):
 def status(x):
 	print player.status()
 
+
 def room_loader(num):
 	global curr_room
 	curr_room = rooms[num]
+
 
 def look(arg):
 #  	arg = ''.join(arg)
@@ -187,23 +175,25 @@ def look(arg):
 	if curr_room.actor != None:
 		valid = input_checker(arg, curr_room.actor.name)
 		if valid[0] == True:
-			print "You eye the %s. %s %s you." % (valid[1], curr_room.actor.sex, random.choice(taunts))
+			print "You eye the %s. %s %s you." % (valid[1],
+			curr_room.actor.sex, random.choice(taunts))
 			tits = True
-			
+
  	if curr_room.feature != None and tits == False:
 		valid = input_checker(arg, curr_room.feature)
 		if valid[0] == True:
 			print "you look at the %s" % curr_room.feature
-			print "It looks expensive, but not too ostentatious or anything.\nThis is a dungeon after all."
+			print "It looks expensive, but not too ostentatious or anything."
+			print "After all, this is a dungeon."
 			tits = True
-			
+
 	if (curr_room.actor != None and curr_room.actor.dead == False and tits == False):
 		print "You see a %s" % curr_room.actor.name
 	elif curr_room.actor != None and curr_room.actor.dead == True:
 		if curr_room.actor.looted == True:
 			print "The corpse of a %s lies on the floor" % curr_room.actor.name
 		else:
-			print "The corpse of a [%s] lies on the floor" % curr_room.actor.name		
+			print "The corpse of a [%s] lies on the floor" % curr_room.actor.name
 
 	if tits == True:
 		pass
@@ -215,35 +205,11 @@ def look(arg):
 		print "Exits are [%s], [%s]" % (curr_room.exitf, curr_room.exitb)
 
 
-# 	try:
-# 		j = 0
-# 		valid = False
-# 		for i in arg:
-# 			if arg[j] in curr_room.actor.name:
-# 				print "You look at the %s." % curr_room.actor.name
-# 				print "The %s regards you warily." % curr_room.actor.name
-# 				valid = True
-# 				break
-# 			elif arg == curr_room.feature:
-# 				examine(arg)
-# 			else:
-# 				j += 1
-# 		if valid != True and curr_room.feature == None:
-# 		else:
-# 			print "You see", curr_room.desc % curr_room.feature
-# 	except AttributeError:
-# 		if curr_room.feature == None:
-# 			print "You see", curr_room.desc
-#  			print "Exits are [%s] [%s]" % (curr_room.exitf, curr_room.exitb)
-# 		else:		
-# 			print "You see",  curr_room.desc % curr_room.feature
-#  			print "Exits are [%s] [%s]" % (curr_room.exitf, curr_room.exitb)
-
-
 def create_player():
 	global player
 	name = raw_input('Enter Your Name\n> ')
 	player = Actor(name)
+
 
 def examine(arg):
 	n = random.choice(xrange(20)) + player.wit
@@ -273,14 +239,14 @@ def enter_room(room):
 		if curr_room.actor.looted == True:
 			print "The corpse of a %s lies on the floor" % curr_room.actor.name
 		else:
-			print "The corpse of a [%s] lies on the floor" % curr_room.actor.name		
+			print "The corpse of a [%s] lies on the floor" % curr_room.actor.name
 	else:
 		pass
 	print "Exits are [%s] [%s]" % (room.exitf, room.exitb)
 
 
 def get_roomz(arg):
-	"""This func will check to see if players are going forward or backward, and 
+	"""This func will check to see if players are going forward or backward, and
 	generate or load a room accordingly"""
 	global rooms
 	global curr_room
@@ -295,10 +261,10 @@ def get_roomz(arg):
 	else:
 		curr_room = Room()
 		curr_room.exitb = roomlink[rooms[curr_room.room_num - 1].exitf]
- 		curr_room.get_exitf()
+		curr_room.get_exitf()
 		enter_room(curr_room)
-			
-			
+
+
 def store(name):
 	print "\n%s:" % name
 	if curr_room.actor.first_time == False:
@@ -314,7 +280,8 @@ def store(name):
 	elif ('3' or 'leave') in x and curr_room.actor.purchase == True:
 		print "%s: \nDon't be a stranger! I've got plenty more where that came from!" % name
 	elif ('3' or 'leave') in x:
-		print "%s: \nWell don't mind me, not like its hard to make a living in a creepy dungeon or anything.  \nI've got kids to feed!" % name
+		print "%s: \nWell don't mind me, not like its hard to make a living" % name
+		print "in a creepy dungeon or anything.  \nI've got kids to feed!"
 	else:
 		print "I don't understand you good sir."
 		store(name)
@@ -324,7 +291,8 @@ def buy(name):
 	print "Come closer, take a look at my wares."
 	y = 1
 	for i in curr_room.actor.inventory:
-		print "%d. %s: %d gold" % (y, curr_room.actor.inventory[y - 1], price[curr_room.actor.inventory[y - 1]])
+		print "%d. %s: %d gold" % (y, curr_room.actor.inventory[y - 1],
+		price[curr_room.actor.inventory[y - 1]])
 		y += 1
 	j = int(raw_input('> '))
 	if type(j) == int:
@@ -336,6 +304,7 @@ def buy(name):
 		store(name)
 	else:
 		print "cant buy that shit"
+
 
 def potion(arg):
 	if arg in player.inventory and player.curr_hp < player.max_hp:
@@ -364,13 +333,8 @@ def use(arg):
 			print "elesed out"
 	else:
 		print "You don't have a %s" % arg
-		
-# THIS IS SOME HEALING POTION SHIT	
-		# player.curr_hp = player.max_hp - 4
-# 		print "ouch!"
-# 		print '%d/%d' % (player.curr_hp, player.max_hp)
-# 		print "arg is %s" % arg
-# 		
+
+
 def take(arg):
 # 	''.join(arg)
 	try:
@@ -387,7 +351,7 @@ def take(arg):
 				print "You search the corpse but find no additional valuables."
 	except TypeError:
 		print "type error 1"
-# 	try:				
+# 	try:
 # 		if arg in curr_room.feature and curr_room.feature_lootable == 'True':
 # 			player.inventory.append(curr_room.feature)
 # 			print "You take the %s" % curr_room.feature
@@ -398,7 +362,8 @@ def take(arg):
 # 			print "You cannot take that."
 # 	except TypeError:
 # 		print "type error 2"
-			
+
+
 def talk(arg):
   	arg = ' '.join(arg)
 	try:
@@ -417,14 +382,13 @@ def talk(arg):
 			print "You recite poetry to the %s's corpse, and it eyes you sorrowfully." % curr_room.actor.name
 			print "Your second stanza is so terrible that the %s's corpse explodes." % curr_room.actor.name
 			curr_room.actor = None
-		
 		else:
 			print "You cannot talk to that."
 	except AttributeError:
-		print "excepted: There is no %s to talk to." % arg	
-	
+		print "excepted: There is no %s to talk to." % arg
+
+
 def execprint(arg):
-# 	print "input is %s" % arg
 	x = arg.split()
 	for i in ', ':
 		x = i.join(x).split(i)
@@ -436,7 +400,8 @@ def execprint(arg):
 			args = x[1:]
 # 			args = ''.join(x[1:])
 			func(args)
-	
+
+
 def input(store = False):
 	while not dead:
 		x = raw_input('> ').lower()
@@ -447,8 +412,8 @@ def input(store = False):
 		else:
 			print "\n"
 			execprint(x)
-			
-			
+
+
 def start():
 	global dead
 	dead = False
@@ -461,6 +426,7 @@ def start():
 	get_roomz(None)
 	input()
 
+
 taunts = [
 'jeers at',
 'beckons toward',
@@ -471,7 +437,7 @@ taunts = [
 'ignores',
 'regards'
 ]
-	
+
 directions = [
 'north',
 'south',
@@ -493,15 +459,19 @@ verblist = {
 "talk": talk,
 'attack': attack,
 'kill': attack,
-'buy': buy, 
+'buy': buy,
 'status': status,
 'drink': use,
 'take': take,
-'loot': take
+'loot': take,
+'inv': status,
+'inventory': status
 }
+
 price = {
 'potion': 10,
-'sword': 20
+'sword': 20,
+'armor': 50,
 }
 
 rooms = []
