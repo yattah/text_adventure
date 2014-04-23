@@ -1,4 +1,5 @@
 import random
+import collections
 global taunts
 global verblist
 prev_room = None
@@ -90,8 +91,13 @@ class Actor(object):
 		print "\nStats: \nStrength: %s\nAgility: %s\nToughness: %s\nWit: %s\n" % (
 		self.strength, self.agility, self.toughness, self.wit)
 		print "Gold: %d" % self.gold
-		print "You are carrying:"
-		print "Inventory: %s" % self.inventory
+		self.inv()
+
+
+	def inv(self):
+		d = {x:player.inventory.count(x) for x in player.inventory}
+		for i in d:
+			print "%dx %s" % (d[i], ''.join(i))
 
 
 # learn more class inheritance dummeh
@@ -209,6 +215,7 @@ def create_player():
 	global player
 	name = raw_input('Enter Your Name\n> ')
 	player = Actor(name)
+	player.inventory = ['potion', 'potion', 'armor']
 
 
 def examine(arg):
