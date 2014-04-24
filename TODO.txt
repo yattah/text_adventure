@@ -12,6 +12,8 @@ add equipped items to status (actor.weapon atm)
 managed to break take function for use on room objects (its commented out go figure)
 so fix it
 
-looting is probably broken, need to fix it
+
 
 merchant buy interface will fuck up if you select an option they dont have available.
+
+combat is fucked up if you have a weapon equipped
