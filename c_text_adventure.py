@@ -57,10 +57,13 @@ class Room(object):
 
 class Item(object):
 	def __init__(self, chance):
-		if chance >= 50:
+		if chance <= 30 :
 			self.weapon()
-		else:
+		elif chance <= 50:
 			self.armor()
+		else:
+			self.consumable()
+
 
 	def weapon(self):
 		x = random.choice(open('weapons.txt').readlines()).split('\t')
@@ -80,6 +83,10 @@ class Item(object):
 		print "armor is is %s, armor range is %d-%d, cost is: %d" % (self.name,
 																self.min_armor, self.max_armor, self.cost)
 
+
+	def consumable(self):
+		self.name = 'potion'
+		self.cost = 25
 
 class Actor(object):
 	def __init__(self, name):
@@ -122,20 +129,20 @@ class Actor(object):
 		print "Gold: %d" % self.gold
 		self.inv()
 
-
-	def inv(self):
-		"""Adds the player's current unique inventory items to a dict as keys with
-		number of repititions as values, then prints it for the player"""
-		print "%s's Inventory:" % player.name
+	def update_short_inv(self):
 		x = 0
 		inv = []
 		for i in player.inventory:
 			# print player.inventory[x].name
 			inv.append(player.inventory[x].name)
 			x +=1
-		d = {y:inv.count(y) for y in inv}
-		# print d
-		for i in d:
+		player.short_inv = {y:inv.count(y) for y in inv}
+
+	def inv(self):
+		"""Adds the player's current unique inventory items to a dict as keys with
+		number of repititions as values, then prints it for the player"""
+		print "%s's Inventory:" % player.name
+		for i in player.short_inv:
 			print "%dx %s" % (d[i], ''.join(i))
 		print '-----------'
 
@@ -220,10 +227,12 @@ def equip(arg):
 			player.weapon = arg
 			player.inventory.remove(arg)
 			print "You equip your %s." % player.weapon
+			player.update_short_inv()
 		else:
 			player.weapon = arg
 			player.inventory.remove(arg)
 			print "You equip your %s." % player.weapon
+			player.update_short_inv()
 	else:
 		print "You dont have a %s to equip." % arg
 
@@ -389,6 +398,7 @@ def buy(name):
 		player.gold -= curr_room.actor.inventory[j - 1].cost
 		print "one %s coming up." % curr_room.actor.inventory[j - 1].name
 		curr_room.actor.inventory.remove(curr_room.actor.inventory[j-1])
+		player.update_short_inv()
 		curr_room.actor.purchase = True
 		curr_room.actor.first_time = True
 		store(name)
@@ -437,6 +447,7 @@ def take(arg):
 				for i in range(x):
 					player.inventory.append(curr_room.actor.inventory.pop())
 				curr_room.actor.looted = True
+				player.update_short_inv()
 			else:
 				print "You search the corpse but find no additional valuables."
 	except TypeError:
