@@ -1,1 +1,26 @@
 TODO
+====
+
+Make NPC class - all ar actors?
+
+make item class???
+
+make equipment class??? yeee boi
+it could be all
+class item
+    init name shit
+
+    weapon
+        get some weapon shit from file
+
+    armor
+        get  some armor shit from file
+
+
+figure out what the fuck a component is and use them (but how)
+
+add more enemy types
+
+
+seperate out status and inventory
+add equipped items to status (actor.weapon atm)

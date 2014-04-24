@@ -55,6 +55,32 @@ class Room(object):
 # 		self.actor.inventory = ['potion']
 
 
+class Item(object):
+	def __init__(self, chance):
+		if chance >= 50:
+			self.weapon()
+		else:
+			self.armor()
+
+	def weapon(self):
+		x = random.choice(open('weapons.txt').readlines()).split('\t')
+		self.name = x[0]
+		self.min_dmg = int(x[1])
+		self.max_dmg = int(x[2])
+		self.cost = int(x[4].strip())
+		print "weapon is %s, damage range is %d-%d, cost is: %d" % (self.name,
+																		self.min_dmg, self.max_dmg, self.cost)
+
+	def armor(self):
+		x = random.choice(open('armor.txt').readlines()).split('\t')
+		self.name = x[0]
+		self.min_armor = int(x[1])
+		self.max_armor = int(x[2])
+		self.cost = int(x[4].strip())
+		print "armor is is %s, armor range is %d-%d, cost is: %d" % (self.name,
+																self.min_armor, self.max_armor, self.cost)
+
+
 class Actor(object):
 	def __init__(self, name):
 		self.name = name
@@ -74,6 +100,7 @@ class Actor(object):
 		self.performances = 0
 		self.performed = False
 		self.sex = random.choice(['He', 'She'])
+		self.weapon = None
 
 	def get_inv(self):
 		self.purchase = False
@@ -82,7 +109,9 @@ class Actor(object):
 		print "getting %d items for mechant inv" % x
 		x = range(x)
 		for i in x:
-			self.inventory.append(random.choice(price.keys()))
+			item = Item(random.choice(xrange(100)))
+			print "chose %s" % item.name
+			self.inventory.append(item)
 
 	def status(self):
 		print "Name: %s" % self.name
@@ -95,9 +124,20 @@ class Actor(object):
 
 
 	def inv(self):
-		d = {x:player.inventory.count(x) for x in player.inventory}
+		"""Adds the player's current unique inventory items to a dict as keys with
+		number of repititions as values, then prints it for the player"""
+		print "%s's Inventory:" % player.name
+		x = 0
+		inv = []
+		for i in player.inventory:
+			# print player.inventory[x].name
+			inv.append(player.inventory[x].name)
+			x +=1
+		d = {y:inv.count(y) for y in inv}
+		# print d
 		for i in d:
 			print "%dx %s" % (d[i], ''.join(i))
+		print '-----------'
 
 
 # learn more class inheritance dummeh
@@ -107,6 +147,12 @@ class Enemy(Actor):
 		self.hostile = True
 		self.gold = random.choice(range(50))
 
+
+def get_item():
+	x = range(100)
+	if x >= 0:
+		item = Item()
+		item.weapon()
 
 def move(arg):
 	global curr_room
@@ -145,7 +191,41 @@ def input_checker(arg, check):
 # 	print "valid is: %s\n" % valid
 	return valid, arg
 
+def combat(p1, p2):
+	print p1.name, "VS", p2.name
+# 	get p1 attack skills
+	x = random.choice(xrange(20)) + p1.strength
+	if x >= 10 + p2.agility:
+# 		does the player have a weapon?
+		if player.weapon == None:
+			damage = random.choice(xrange(3)) + p1.strength
+			p2.curr_hp = p2.curr_hp - damage
+			if p2.curr_hp <= 0:
+				p2.dead = True
+				print "You slay the [%s]" % p2.name
+			else:
+				print "You %s the %s for %d damage." % (random.choice(attack_fist), p2.name, damage)
+				print "The %s has %d health remaining" % (p2.name, p2.curr_hp)
+		else:
+			print 'weapon not found in weapons.txt'
+	else:
+		print 'You miss. Attack roll was %d' % x
 
+def equip(arg):
+	arg = ''.join(arg)
+	if arg in player.inventory:
+		if player.weapon != None:
+			player.inventory.append(player.weapon)
+			print "You unequip your %s." %player.weapon
+			player.weapon = arg
+			player.inventory.remove(arg)
+			print "You equip your %s." % player.weapon
+		else:
+			player.weapon = arg
+			player.inventory.remove(arg)
+			print "You equip your %s." % player.weapon
+	else:
+		print "You dont have a %s to equip." % arg
 
 def attack(arg):
 	if 'darkness' in arg:
@@ -159,15 +239,18 @@ def attack(arg):
 		else:
 			arg = valid[1]
 			if curr_room.actor.dead == False:
-				curr_room.actor.dead = True
-				print "You slay the [%s]." % curr_room.actor.name
+# TODO make it so you can actually attack!
+				combat(player, curr_room.actor)
+
+				# curr_room.actor.dead = True
+				# print "You slay the [%s]." % curr_room.actor.name
 			elif curr_room.actor.dead == True and arg == curr_room.actor.name:
 				print "You have already slain the [%s]" % curr_room.actor.name
 			else:
 				print "There is no %s to attack." % arg
 
 def status(x):
-	print player.status()
+	player.status()
 
 
 def room_loader(num):
@@ -215,7 +298,6 @@ def create_player():
 	global player
 	name = raw_input('Enter Your Name\n> ')
 	player = Actor(name)
-	player.inventory = ['potion', 'potion', 'armor']
 
 
 def examine(arg):
@@ -298,14 +380,15 @@ def buy(name):
 	print "Come closer, take a look at my wares."
 	y = 1
 	for i in curr_room.actor.inventory:
-		print "%d. %s: %d gold" % (y, curr_room.actor.inventory[y - 1],
-		price[curr_room.actor.inventory[y - 1]])
+		print "%d. %s: %d gold" % (y, curr_room.actor.inventory[y - 1].name,
+		curr_room.actor.inventory[y - 1].cost)
 		y += 1
 	j = int(raw_input('> '))
 	if type(j) == int:
 		player.inventory.append(curr_room.actor.inventory[j - 1])
-		player.gold -= price[curr_room.actor.inventory[j - 1]]
-		print "one %s coming up." % curr_room.actor.inventory[j - 1]
+		player.gold -= curr_room.actor.inventory[j - 1].cost
+		print "one %s coming up." % curr_room.actor.inventory[j - 1].name
+		curr_room.actor.inventory.remove(curr_room.actor.inventory[j-1])
 		curr_room.actor.purchase = True
 		curr_room.actor.first_time = True
 		store(name)
@@ -434,6 +517,15 @@ def start():
 	input()
 
 
+attack_fist = [
+'slap',
+'punch',
+'caress',
+'kick',
+'pummel',
+'knee'
+]
+
 taunts = [
 'jeers at',
 'beckons toward',
@@ -472,7 +564,9 @@ verblist = {
 'take': take,
 'loot': take,
 'inv': status,
-'inventory': status
+'inventory': status,
+'equip': equip,
+'use': equip
 }
 
 price = {
