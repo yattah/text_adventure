@@ -108,6 +108,23 @@ class Actor(object):
 		self.performed = False
 		self.sex = random.choice(['He', 'She'])
 		self.weapon = None
+		self.min_dmg = 1
+		self.max_dmg = 4
+		self.armor = None
+
+	def equip(self, attr):
+		if attr == 'weapon':
+			self.min_dmg += self.weapon.min_dmg
+			self.max_dmg += self.weapon.max_dmg
+		else:
+			print "you're a tool, fix this"
+
+	def unequip(self, attr):
+		if attr == 'weapon':
+			self.min_dmg -= self.weapon.min_dmg
+			self.max_dmg -= self.weapon.max_dmg
+		else:
+			print "you're a tool, fix this"
 
 	def get_inv(self):
 		self.purchase = False
@@ -127,6 +144,7 @@ class Actor(object):
 		print "\nStats: \nStrength: %s\nAgility: %s\nToughness: %s\nWit: %s\n" % (
 		self.strength, self.agility, self.toughness, self.wit)
 		print "Gold: %d" % self.gold
+		print "damage range is %d - %d" % (player.min_dmg, player.max_dmg)
 		self.inv()
 
 	def update_short_inv(self):
@@ -141,9 +159,10 @@ class Actor(object):
 	def inv(self):
 		"""Adds the player's current unique inventory items to a dict as keys with
 		number of repititions as values, then prints it for the player"""
+		self.update_short_inv()
 		print "%s's Inventory:" % player.name
 		for i in player.short_inv:
-			print "%dx %s" % (d[i], ''.join(i))
+			print "%dx %s" % (player.short_inv[i], ''.join(i))
 		print '-----------'
 
 
@@ -201,11 +220,11 @@ def input_checker(arg, check):
 def combat(p1, p2):
 	print p1.name, "VS", p2.name
 # 	get p1 attack skills
-	x = random.choice(xrange(20)) + p1.strength
+	x = random.choice(xrange(20)) + p1.strength + 20
 	if x >= 10 + p2.agility:
 # 		does the player have a weapon?
 		if player.weapon == None:
-			damage = random.choice(xrange(3)) + p1.strength
+			damage = random.choice(xrange(3)) + p1.strength + 20
 			p2.curr_hp = p2.curr_hp - damage
 			if p2.curr_hp <= 0:
 				p2.dead = True
@@ -220,21 +239,34 @@ def combat(p1, p2):
 
 def equip(arg):
 	arg = ''.join(arg)
-	if arg in player.inventory:
+	if arg in player.short_inv.keys():  # therefore we know player has item to equip
+# 		so we know it exists, but not what the element is.
+		x = 0
+		for i in player.inventory:
+			if arg in player.inventory[x].name:
+				inv_element = x
+			else:
+				x += 1
 		if player.weapon != None:
 			player.inventory.append(player.weapon)
-			print "You unequip your %s." %player.weapon
-			player.weapon = arg
-			player.inventory.remove(arg)
-			print "You equip your %s." % player.weapon
+			print "You unequip your %s." %player.weapon.name
+			player.unequip('weapon')
+			player.weapon = player.inventory[inv_element]
+			player.inventory.remove(player.inventory[inv_element])
+			print "You equip your %s." % player.weapon.name
+			player.equip('weapon')
 			player.update_short_inv()
+
 		else:
-			player.weapon = arg
-			player.inventory.remove(arg)
-			print "You equip your %s." % player.weapon
+			player.weapon = player.inventory[inv_element]
+			player.inventory.remove(player.inventory[inv_element])
+			print "You equip your %s." % player.weapon.name
+			player.equip('weapon')
 			player.update_short_inv()
+
 	else:
 		print "You dont have a %s to equip." % arg
+
 
 def attack(arg):
 	if 'darkness' in arg:
@@ -441,7 +473,8 @@ def take(arg):
 		if curr_room.actor.dead == True and curr_room.actor.name in arg:
 			if curr_room.actor.looted == False:
 				print "You search the corpse of the %s and find:" % curr_room.actor.name
-				print curr_room.actor.inventory
+				for i in curr_room.actor.inventory:
+					print getattr(i, 'name')
 				print "You place these items into your backpack."
 				x = len(curr_room.actor.inventory)
 				for i in range(x):
