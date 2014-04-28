@@ -71,6 +71,7 @@ class Item(object):
 		self.min_dmg = int(x[1])
 		self.max_dmg = int(x[2])
 		self.cost = int(x[4].strip())
+		self.weapon_type = x[5].strip()
 		print "weapon is %s, damage range is %d-%d, cost is: %d" % (self.name,
 																		self.min_dmg, self.max_dmg, self.cost)
 
@@ -108,6 +109,7 @@ class Actor(object):
 		self.performed = False
 		self.sex = random.choice(['He', 'She'])
 		self.weapon = None
+		self.weapon_type = 'fist'
 		self.min_dmg = 1
 		self.max_dmg = 4
 		self.armor = None
@@ -219,23 +221,35 @@ def input_checker(arg, check):
 
 def combat(p1, p2):
 	print p1.name, "VS", p2.name
-# 	get p1 attack skills
+	print "-" * len(p1.name + ' vs ' + p2.name)
 	x = random.choice(xrange(20)) + p1.strength + 20
 	if x >= 10 + p2.agility:
-# 		does the player have a weapon?
-		if player.weapon == None:
-			damage = random.choice(xrange(3)) + p1.strength + 20
-			p2.curr_hp = p2.curr_hp - damage
+		damage = p1.min_dmg + random.choice(xrange(p1.max_dmg - p1.min_dmg)) + p1.strength
+		p2.curr_hp = p2.curr_hp - damage
+		if p1.name == player.name:
+
 			if p2.curr_hp <= 0:
 				p2.dead = True
+				print "You %s the %s for %d damage.\n" % (random.choice(attack_dict[p1.weapon_type]), p2.name, damage)
 				print "You slay the [%s]" % p2.name
 			else:
-				print "You %s the %s for %d damage." % (random.choice(attack_fist), p2.name, damage)
-				print "The %s has %d health remaining" % (p2.name, p2.curr_hp)
+				print "You %s the %s for %d damage." % (random.choice(attack_dict[p1.weapon_type]), p2.name, damage)
+				print "The %s has %d health remaining\n" % (p2.name, p2.curr_hp)
+				combat(p2, p1)
 		else:
-			print 'weapon not found in weapons.txt'
+			if p2.curr_hp <= 0:
+				global dead
+				dead = True
+				print "The %s %ss you for %d damage." % (p1.name, random.choice(attack_dict[p1.weapon_type]), damage)
+				death(p1.name)
+			else:
+				print "The %s %ss you for %d damage." % (p1.name, random.choice(attack_dict[p1.weapon_type]), damage)
+				print "you have %d health remaining.\n" % p2.curr_hp
+				combat(p2, p1)
 	else:
 		print 'You miss. Attack roll was %d' % x
+# enemy attacks
+
 
 def equip(arg):
 	arg = ''.join(arg)
@@ -247,11 +261,14 @@ def equip(arg):
 				inv_element = x
 			else:
 				x += 1
+		if arg == 'potion':
+			use(potion)
 		if player.weapon != None:
 			player.inventory.append(player.weapon)
 			print "You unequip your %s." %player.weapon.name
 			player.unequip('weapon')
 			player.weapon = player.inventory[inv_element]
+			player.weapon_type = player.weapon.weapon_type
 			player.inventory.remove(player.inventory[inv_element])
 			print "You equip your %s." % player.weapon.name
 			player.equip('weapon')
@@ -259,6 +276,7 @@ def equip(arg):
 
 		else:
 			player.weapon = player.inventory[inv_element]
+			player.weapon_type = player.weapon.weapon_type
 			player.inventory.remove(player.inventory[inv_element])
 			print "You equip your %s." % player.weapon.name
 			player.equip('weapon')
@@ -280,9 +298,8 @@ def attack(arg):
 		else:
 			arg = valid[1]
 			if curr_room.actor.dead == False:
-# TODO make it so you can actually attack!
+# TODO make it so you can actually attack with a weapon.
 				combat(player, curr_room.actor)
-
 				# curr_room.actor.dead = True
 				# print "You slay the [%s]." % curr_room.actor.name
 			elif curr_room.actor.dead == True and arg == curr_room.actor.name:
@@ -439,7 +456,7 @@ def buy(name):
 
 
 def potion(arg):
-	if arg in player.inventory and player.curr_hp < player.max_hp:
+	if player.curr_hp < player.max_hp:
 		player.inventory.remove(arg)
 		x = random.choice(xrange(5)) + player.wit
 		player.curr_hp += x
@@ -455,9 +472,17 @@ def potion(arg):
 
 def use(arg):
 	arg = ''.join(arg)
-	if arg in player.inventory:
+	x = 0
+	for i in player.inventory:
+		if arg in player.inventory[x].name:
+			inv_element = x
+			valid = True
+		else:
+			x += 1
+
+	if valid == True:
 		if arg == 'potion':
-			potion(arg)
+			potion(player.inventory[inv_element])
 		elif arg == 'scroll':
 # 			scroll()
 			print "scrolls leel"
@@ -547,10 +572,24 @@ def input(store = False):
 			print "\n"
 			execprint(x)
 
+def death(killer):
+	print "--------------------------"
+	print "\n\nYou perished at the hands of a %s" % killer
+	print "You explored %d rooms" % len(rooms)
+	print "\n Restart?"
+	r = raw_input('> ').lower()
+	if 'y' in r:
+		start()
+	else:
+		exit(0)
 
 def start():
 	global dead
 	dead = False
+	rooms = []
+	curr_room = None
+	prev_room = None
+	room_num = -1
 	print "-" * 50
 	print "         COZMIX: THE QUEST FOR COMPLETION"
 	print "-" * 50
@@ -561,7 +600,24 @@ def start():
 	input()
 
 
-attack_fist = [
+slashing = [
+'slash',
+'slice'
+]
+
+blunt = [
+'crush',
+'pummel',
+'smash'
+]
+
+piercing = [
+'stab',
+'puncture',
+'pierce'
+]
+
+fist = [
 'slap',
 'punch',
 'caress',
@@ -569,6 +625,13 @@ attack_fist = [
 'pummel',
 'knee'
 ]
+
+attack_dict = {
+'fist': fist,
+"slashing": slashing,
+"piercing": piercing,
+"blunt": blunt
+}
 
 taunts = [
 'jeers at',
