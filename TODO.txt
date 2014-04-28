@@ -16,4 +16,6 @@ so fix it
 
 merchant buy interface will fuck up if you select an option they dont have available.
 
-combat is fucked up if you have a weapon equipped
+let enemies have weapons too
+
+hostiles should attack  if player performs an action in the room
