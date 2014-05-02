@@ -43,16 +43,15 @@ class Room(object):
 			pass
 
 	def get_actor(self):
-		if random.choice(range(100)) > 10:
+		if random.choice(range(100)) > 80:
 			x = random.choice(open('npc.txt').readlines()).split('\t')
 			self.actor = Actor(x[1].strip())
 			self.actor.desc = x[0] % self.actor.name
-			self.actor.get_inv()
+			self.actor.get_inv(random.choice(xrange(4)) + 1)
 		else:
 			x = random.choice(open('enemies.txt').readlines()).split('\t')
 			self.actor = Enemy(x[1].strip())
 			self.actor.desc = x[0] % self.actor.name
-# 		self.actor.inventory = ['potion']
 
 
 class Item(object):
@@ -92,7 +91,7 @@ class Item(object):
 class Actor(object):
 	def __init__(self, name):
 		self.name = name
-		self.gold = 100
+		self.gold = random.choice(xrange(25))
 		self.inventory = []
 		self.dead = False
 		self.looted = False
@@ -128,15 +127,13 @@ class Actor(object):
 		else:
 			print "you're a tool, fix this"
 
-	def get_inv(self):
+	def get_inv(self, num):
 		self.purchase = False
 		self.first_time = False
-		x = random.choice(range(4)) + 1
-		print "getting %d items for mechant inv" % x
-		x = range(x)
+		x = range(num)
 		for i in x:
 			item = Item(random.choice(xrange(100)))
-			print "chose %s" % item.name
+			# print "chose %s" % item.name
 			self.inventory.append(item)
 
 	def status(self):
@@ -174,14 +171,19 @@ class Enemy(Actor):
 		super(Enemy, self).__init__(name)
 		self.hostile = True
 		self.gold = random.choice(range(50))
+		if room_num >= 1:
+# 	YA LEFT OFF HERE DINGUS
+			self.inventory.append(get_item())
+			print "equipping %s with %s" % (self.name, self.inventory[0].name)
 
+		else:
+			print "%s has nothing to equip." % self.name
 
 def get_item():
 	x = range(100)
 	if x >= 0:
-		item = Item()
-		item.weapon()
-
+		item = Item(10)
+	return item
 def move(arg):
 	global curr_room
 	arg = ' '.join(arg)
@@ -298,7 +300,6 @@ def attack(arg):
 		else:
 			arg = valid[1]
 			if curr_room.actor.dead == False:
-# TODO make it so you can actually attack with a weapon.
 				combat(player, curr_room.actor)
 				# curr_room.actor.dead = True
 				# print "You slay the [%s]." % curr_room.actor.name
@@ -356,6 +357,7 @@ def create_player():
 	global player
 	name = raw_input('Enter Your Name\n> ')
 	player = Actor(name)
+	player.gold = 40 + random.choice(xrange(20))
 
 
 def examine(arg):
@@ -498,6 +500,8 @@ def take(arg):
 		if curr_room.actor.dead == True and curr_room.actor.name in arg:
 			if curr_room.actor.looted == False:
 				print "You search the corpse of the %s and find:" % curr_room.actor.name
+				print "%d gold." % curr_room.actor.gold
+				player.gold += curr_room.actor.gold
 				for i in curr_room.actor.inventory:
 					print getattr(i, 'name')
 				print "You place these items into your backpack."
