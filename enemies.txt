@@ -1,1 +1,5 @@
 A clattering [%s] stands up from within a pile of bones.	skeleton
+An emaciated [%s] emerges from the shadows.	wight
+A muscular [%s] watches you from a corner.	orc
+A [%s] climbs out of a coffin.	mummy
+A life sized [%s] squelches your way.	poo

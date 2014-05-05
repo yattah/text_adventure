@@ -1,4 +1,4 @@
-Breastplate	4	6	chest	45
-Leather_Tunic	2	4	chest	20
+breastplate	4	6	chest	45
+leather_tunic	2	4	chest	20
 shield	6	10	left_hand	50
 boots	2	3	feet	15

@@ -67,6 +67,7 @@ class Item(object):
 	def weapon(self):
 		x = random.choice(open('weapons.txt').readlines()).split('\t')
 		self.name = x[0]
+		self.type = 'weapon'
 		self.min_dmg = int(x[1])
 		self.max_dmg = int(x[2])
 		self.cost = int(x[4].strip())
@@ -77,14 +78,17 @@ class Item(object):
 	def armor(self):
 		x = random.choice(open('armor.txt').readlines()).split('\t')
 		self.name = x[0]
+		self.type = 'armor'
 		self.min_armor = int(x[1])
 		self.max_armor = int(x[2])
 		self.cost = int(x[4].strip())
-		print "armor is is %s, armor range is %d-%d, cost is: %d" % (self.name,
-																self.min_armor, self.max_armor, self.cost)
+		self.ac = self.min_armor + random.choice(xrange(self.max_armor - self.min_armor))
+		print "armor is is %s, armor range is %d-%d, cost is: %d, AC is %d" % (self.name,
+																self.min_armor, self.max_armor, self.cost, self.ac)
 
 
 	def consumable(self):
+		self.type = 'consumable'
 		self.name = 'potion'
 		self.cost = 25
 
@@ -99,10 +103,6 @@ class Actor(object):
 		self.strength = random.choice(range(6))
 		self.toughness = random.choice(range(6))
 		self.agility = random.choice(range(6))
-		self.max_hp = 10 + self.toughness
-		self.max_mp = 3 * self.wit
-		self.curr_hp = self.max_hp
-		self.curr_mp = self.max_mp
 		self.hostile = False
 		self.performances = 0
 		self.performed = False
@@ -110,22 +110,37 @@ class Actor(object):
 		self.weapon = None
 		self.weapon_type = 'fist'
 		self.min_dmg = 1
-		self.max_dmg = 4
+		self.max_dmg = 3
 		self.armor = None
+		self.equipped = []
+		self.ac = 10 + (self.agility / 2)
+		self.calc_stats()
+
+	def calc_stats(self):
+		if self.armor != None:
+			self.ac = 10 + self.armor.ac + (self.agility /2)
+		self.max_hp = 10 + self.toughness
+		self.max_mp = 3 * self.wit
+		self.curr_hp = self.max_hp
+		self.curr_mp = self.max_mp
 
 	def equip(self, attr):
 		if attr == 'weapon':
 			self.min_dmg += self.weapon.min_dmg
 			self.max_dmg += self.weapon.max_dmg
-		else:
-			print "you're a tool, fix this"
+			self.equipped.append(self.weapon)
+		elif attr == 'armor':
+			self.equipped.append(self.armor)
+			self.calc_stats()
 
 	def unequip(self, attr):
 		if attr == 'weapon':
 			self.min_dmg -= self.weapon.min_dmg
 			self.max_dmg -= self.weapon.max_dmg
-		else:
-			print "you're a tool, fix this"
+			self.equipped.remove(self.weapon)
+		elif attr == 'armor':
+			self.equipped.remove(self.armor)
+			self.calc_stats()
 
 	def get_inv(self, num):
 		self.purchase = False
@@ -140,13 +155,22 @@ class Actor(object):
 		print "Name: %s" % self.name
 		print "HP: %d/%d" % (self.curr_hp, self.max_hp)
 		print "MP: %d/%d" % (self.curr_mp, self.max_mp)
+		print "AC: %d" % self.ac
 		print "\nStats: \nStrength: %s\nAgility: %s\nToughness: %s\nWit: %s\n" % (
 		self.strength, self.agility, self.toughness, self.wit)
 		print "Gold: %d" % self.gold
 		print "damage range is %d - %d" % (player.min_dmg, player.max_dmg)
+		self.is_equipped()
 		self.inv()
 
+	def is_equipped(self):
+# 		TODO shit is fuckin uyp here.
+		print "You have equipped:"
+		for i in self.equipped:
+			print self.equipped[0].name
+
 	def update_short_inv(self):
+		"""count the number of instances of an item y for readable inv printing."""
 		x = 0
 		inv = []
 		for i in player.inventory:
@@ -160,6 +184,7 @@ class Actor(object):
 		number of repititions as values, then prints it for the player"""
 		self.update_short_inv()
 		print "%s's Inventory:" % player.name
+		print "Gold: %d" % self.gold
 		for i in player.short_inv:
 			print "%dx %s" % (player.short_inv[i], ''.join(i))
 		print '-----------'
@@ -172,7 +197,6 @@ class Enemy(Actor):
 		self.hostile = True
 		self.gold = random.choice(range(50))
 		if room_num >= 1:
-# 	YA LEFT OFF HERE DINGUS
 			self.inventory.append(get_item())
 			print "equipping %s with %s" % (self.name, self.inventory[0].name)
 
@@ -199,7 +223,9 @@ def move(arg):
 
 
 def input_checker(arg, check):
-# 	print "does this work?"
+	"""As near as i can tell, this takes player input as arg, and checks for a specific value present in the arg.
+	It will return bool valid and set arg to the value being checked for.
+	eg. kill the motherfuckin skeleton will return skeleton if check is curr_room.actor.name and there's a skeleton in the room."""
 	arg = ''.join(arg).split(' ')
 # 	print "arg is %r, check is %r\n" % (arg, check)
 	valid = False
@@ -224,8 +250,8 @@ def input_checker(arg, check):
 def combat(p1, p2):
 	print p1.name, "VS", p2.name
 	print "-" * len(p1.name + ' vs ' + p2.name)
-	x = random.choice(xrange(20)) + p1.strength + 20
-	if x >= 10 + p2.agility:
+	x = random.choice(xrange(20)) + p1.strength
+	if x >= p2.ac:
 		damage = p1.min_dmg + random.choice(xrange(p1.max_dmg - p1.min_dmg)) + p1.strength
 		p2.curr_hp = p2.curr_hp - damage
 		if p1.name == player.name:
@@ -263,8 +289,20 @@ def equip(arg):
 				inv_element = x
 			else:
 				x += 1
-		if arg == 'potion':
+# 		figure out what type of item is being equipped
+		if player.inventory[inv_element].type == 'armor':
+			equip_armor(inv_element)
+		elif player.inventory[inv_element].type == 'weapon':
+			equip_weapon(inv_element)
+		else: # TODO change this when adding scrolls
 			use(potion)
+
+	else:
+		print "You dont have a %s to equip." % arg
+
+
+def equip_weapon(inv_element):
+# 		player is equipping a weapon
 		if player.weapon != None:
 			player.inventory.append(player.weapon)
 			print "You unequip your %s." %player.weapon.name
@@ -284,9 +322,22 @@ def equip(arg):
 			player.equip('weapon')
 			player.update_short_inv()
 
-	else:
-		print "You dont have a %s to equip." % arg
-
+def equip_armor(inv_element):
+		if player.armor != None:
+			player.inventory.append(player.armor)
+			print 'You unequip your %s.' % player.armor.name
+			player.unequip('armor')
+			player.armor = player.inventory[inv_element]
+			player.inventory.remove(player.inventory[inv_element])
+			print "You don your %s." % player.armor.name
+			player.equip('armor')
+			player.update_short_inv
+		else:
+			player.armor = player.inventory[inv_element]
+			player.inventory.remove(player.inventory[inv_element])
+			print "You don your %s." % player.armor.name
+			player.equip('armor')
+			player.update_short_inv
 
 def attack(arg):
 	if 'darkness' in arg:
@@ -311,6 +362,8 @@ def attack(arg):
 def status(x):
 	player.status()
 
+def inv(x):
+	player.inv()
 
 def room_loader(num):
 	global curr_room
@@ -326,6 +379,10 @@ def look(arg):
 			print "You eye the %s. %s %s you." % (valid[1],
 			curr_room.actor.sex, random.choice(taunts))
 			tits = True
+		elif curr_room.actor.dead == True and valid[0] == True:
+			print "You eye the corpse of the %s" % curr_room.actor.name
+		else:
+			pass
 
  	if curr_room.feature != None and tits == False:
 		valid = input_checker(arg, curr_room.feature)
@@ -357,7 +414,18 @@ def create_player():
 	global player
 	name = raw_input('Enter Your Name\n> ')
 	player = Actor(name)
-	player.gold = 40 + random.choice(xrange(20))
+	print "Choose your class, %s." % player.name
+	print "1. Warrior"
+	x = raw_input('> ').lower()
+	if '1' or 'warrior' in x:
+		player.strength += 3
+		player.agility += 1
+		player.toughness += 3
+	else:
+		print "You should have chosen a class..."
+	player.gold = 5 + random.choice(xrange(20))
+	player.calc_stats()
+
 
 
 def examine(arg):
@@ -674,8 +742,8 @@ verblist = {
 'drink': use,
 'take': take,
 'loot': take,
-'inv': status,
-'inventory': status,
+'inv': inv,
+'inventory': inv,
 'equip': equip,
 'use': equip
 }
