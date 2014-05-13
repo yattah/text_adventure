@@ -15,7 +15,6 @@ so fix it
 
 
 merchant buy interface will fuck up if you select an option they dont have available.
-
-let enemies have weapons too
+Shouldn't be able to buy anything if you can't afford it.
 
 hostiles should attack  if player performs an action in the room

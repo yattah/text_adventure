@@ -72,7 +72,7 @@ class Item(object):
 		self.max_dmg = int(x[2])
 		self.cost = int(x[4].strip())
 		self.weapon_type = x[5].strip()
-		print "weapon is %s, damage range is %d-%d, cost is: %d" % (self.name,
+		# print "weapon is %s, damage range is %d-%d, cost is: %d" % (self.name,
 																		self.min_dmg, self.max_dmg, self.cost)
 
 	def armor(self):
@@ -83,7 +83,7 @@ class Item(object):
 		self.max_armor = int(x[2])
 		self.cost = int(x[4].strip())
 		self.ac = self.min_armor + random.choice(xrange(self.max_armor - self.min_armor))
-		print "armor is is %s, armor range is %d-%d, cost is: %d, AC is %d" % (self.name,
+		# print "armor is is %s, armor range is %d-%d, cost is: %d, AC is %d" % (self.name,
 																self.min_armor, self.max_armor, self.cost, self.ac)
 
 
@@ -159,15 +159,16 @@ class Actor(object):
 		print "\nStats: \nStrength: %s\nAgility: %s\nToughness: %s\nWit: %s\n" % (
 		self.strength, self.agility, self.toughness, self.wit)
 		print "Gold: %d" % self.gold
-		print "damage range is %d - %d" % (player.min_dmg, player.max_dmg)
+		print "damage range is %d - %d" % ((player.min_dmg + player.strength), (player.strength + player.max_dmg))
 		self.is_equipped()
 		self.inv()
 
 	def is_equipped(self):
-# 		TODO shit is fuckin uyp here.
-		print "You have equipped:"
+		print "\nYou have equipped:"
+		x = 0
 		for i in self.equipped:
-			print self.equipped[0].name
+			print self.equipped[x].name
+			x += 1
 
 	def update_short_inv(self):
 		"""count the number of instances of an item y for readable inv printing."""
@@ -183,7 +184,7 @@ class Actor(object):
 		"""Adds the player's current unique inventory items to a dict as keys with
 		number of repititions as values, then prints it for the player"""
 		self.update_short_inv()
-		print "%s's Inventory:" % player.name
+		print "You are carrying:"
 		print "Gold: %d" % self.gold
 		for i in player.short_inv:
 			print "%dx %s" % (player.short_inv[i], ''.join(i))
@@ -198,10 +199,11 @@ class Enemy(Actor):
 		self.gold = random.choice(range(50))
 		if room_num >= 1:
 			self.inventory.append(get_item())
-			print "equipping %s with %s" % (self.name, self.inventory[0].name)
+			# print "equipping %s with %s" % (self.name, self.inventory[0].name)
 
 		else:
-			print "%s has nothing to equip." % self.name
+			# print "%s has nothing to equip." % self.name
+			pass
 
 def get_item():
 	x = range(100)
@@ -468,7 +470,6 @@ def get_roomz(arg):
 	global rooms
 	global curr_room
 	global room_num
-	x = random.choice(xrange(100))
 	if curr_room == None:
 		curr_room = Room()
 		enter_room(curr_room)
@@ -483,24 +484,27 @@ def get_roomz(arg):
 
 
 def store(name):
-	print "\n%s:" % name
-	if curr_room.actor.first_time == False:
-		print "Welcome to my shop.  What do you want to do?"
-	else:
-		print "Would you like to do anything else?"
-	print "1: buy\n2: sell\n3: leave"
-	x = raw_input('> ')
-	if ('1' or 'buy') in x:
-		buy(name)
-	elif ('2' or 'sell') in x:
-		print "I can't buy anything right now."
-	elif ('3' or 'leave') in x and curr_room.actor.purchase == True:
-		print "%s: \nDon't be a stranger! I've got plenty more where that came from!" % name
-	elif ('3' or 'leave') in x:
-		print "%s: \nWell don't mind me, not like its hard to make a living" % name
-		print "in a creepy dungeon or anything.  \nI've got kids to feed!"
-	else:
-		print "I don't understand you good sir."
+	try:
+		print "\n%s:" % name
+		if curr_room.actor.first_time == False:
+			print "Welcome to my shop.  What do you want to do?"
+		else:
+			print "Would you like to do anything else?"
+		print "1: buy\n2: sell\n3: leave"
+		x = raw_input('> ')
+		if ('1' or 'buy') in x:
+			buy(name)
+		elif ('2' or 'sell') in x:
+			print "I can't buy anything right now."
+		elif ('3' or 'leave') in x and curr_room.actor.purchase == True:
+			print "%s: \nDon't be a stranger! I've got plenty more where that came from!" % name
+		elif ('3' or 'leave') in x:
+			print "%s: \nWell don't mind me, not like its hard to make a living" % name
+			print "in a creepy dungeon or anything.  \nI've got kids to feed!"
+		else:
+			print "I don't understand you good sir."
+	except IndexError:
+		print "Can't have none o' that..."
 		store(name)
 
 
@@ -512,7 +516,7 @@ def buy(name):
 		curr_room.actor.inventory[y - 1].cost)
 		y += 1
 	j = int(raw_input('> '))
-	if type(j) == int:
+	if type(j) == int and player.gold >= curr_room.actor.inventory[j - 1].cost:
 		player.inventory.append(curr_room.actor.inventory[j - 1])
 		player.gold -= curr_room.actor.inventory[j - 1].cost
 		print "one %s coming up." % curr_room.actor.inventory[j - 1].name
@@ -522,7 +526,8 @@ def buy(name):
 		curr_room.actor.first_time = True
 		store(name)
 	else:
-		print "cant buy that shit"
+		print "You can't afford that."
+		store(name)
 
 
 def potion(arg):
